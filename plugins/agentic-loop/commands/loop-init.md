@@ -65,32 +65,53 @@ free to end half-finished. Verify after committing:
 git ls-files -s plugins/agentic-loop/hooks/loop-guard.sh   # expect 100755
 ```
 
-Then add this to the repo's committed `.claude/settings.json` (merge — never
-replace existing keys):
+### Then make the commands load without a plugin
+
+**A marketplace registration is not enough, and on its own it does nothing in a
+cloud container.** Registering the plugin in `.claude/settings.json` — `github`
+source *or* vendored `directory` source — leaves `/ship` returning "Unknown
+command" there, with `~/.claude/plugins` never created and nothing logged. Wire
+it up as project files instead, which are read straight from the working tree:
+
+Copy the command files into `.claude/commands/`, rewriting the template
+references, since `${CLAUDE_PLUGIN_ROOT}` is only set for a loaded plugin:
+
+```
+sed 's|${CLAUDE_PLUGIN_ROOT}/templates|plugins/agentic-loop/templates|g' \
+  plugins/agentic-loop/commands/ship.md > .claude/commands/ship.md
+```
+
+Declare the `Stop` hook directly in the repo's committed `.claude/settings.json`
+too — the plugin's `hooks/hooks.json` is only read when the plugin loads (merge,
+never replace existing keys):
 
 ```json
 {
-  "extraKnownMarketplaces": {
-    "agenticartists": {
-      "source": { "source": "directory", "path": "." }
-    }
-  },
-  "enabledPlugins": { "agentic-loop@agenticartists": true }
+  "hooks": {
+    "Stop": [{ "hooks": [{
+      "type": "command",
+      "command": "\"$CLAUDE_PROJECT_DIR/plugins/agentic-loop/hooks/loop-guard.sh\"",
+      "timeout": 10
+    }]}]
+  }
 }
 ```
 
-`path` is `.` because `.claude-plugin/marketplace.json` now lives at this repo's
-root, and `marketplace.json` points at `./plugins/agentic-loop` from there.
+Verify the hook both ways before moving on — with no `.claude/.loop-active` it
+must exit 0 silently, and with one it must emit `"decision": "block"`:
 
-This matters more than it looks. A `/plugin install` writes to the *machine's*
-home directory, so in an ephemeral cloud container it evaporates when the
-session ends and every future session would have to reinstall by hand.
-Committing both the plugin files and the registration to the repo makes `/ship`
-available in any fresh session with no setup and no network fetch at all.
+```
+bash plugins/agentic-loop/hooks/loop-guard.sh </dev/null; echo "exit=$?"
+```
 
-The tradeoff is that the copy is a copy: when the plugin changes upstream,
-someone has to re-copy it into every consuming repo. That's deliberate — see
-"Vendoring, not fetching" in the claude-plugins README.
+You may also add `extraKnownMarketplaces` + `enabledPlugins` with a directory
+source. That's harmless and makes the plugin path work from a desktop CLI, but
+it is not what makes `/ship` resolve in a cloud session — don't let its presence
+convince you the repo is set up.
+
+The tradeoff is that a copy is a copy: when the plugin changes upstream, someone
+has to re-copy it into every consuming repo, `.claude/commands/` included. See
+the claude-plugins README.
 
 ## 4. Allowlist the gate commands, so loops don't spam permission prompts
 

@@ -12,33 +12,68 @@ new session → /ship → plan, build, review, merge, deploy,
             → new session → /ship → ...
 ```
 
-## Vendoring, not fetching
+## Cloud containers don't load this as a plugin at all
 
-**Claude Code cloud containers do not fetch a remote marketplace at session
-start.** A repo registered with `{"source": "github", "repo":
-"AgenticArtists/claude-plugins"}` comes up with no plugin loaded at all — `/ship`
-returns "Unknown command", `~/.claude/plugins` is never created, and there is no
-error to find from inside the session. Only a local `directory` source works.
+**In Claude Code cloud containers, plugin registration in a repo's
+`.claude/settings.json` does nothing — whatever the marketplace source.** Both
+routes were tested against `agenticartists.com` and both failed identically:
+`/ship` and `/agentic-loop:ship` return "Unknown command", `~/.claude/plugins`
+is never created, and nothing is logged.
 
-So consuming repos **vendor** this plugin: they copy
+| Registration | Result |
+|---|---|
+| `{"source": "github", "repo": "AgenticArtists/claude-plugins"}` | ✗ not loaded |
+| Plugin vendored in-repo + `{"source": "directory", "path": "."}` | ✗ not loaded |
+| `.claude/commands/ship.md` (project command) | ✓ loaded |
+
+The source type was never the variable. These containers do not appear to run
+the plugin install step from project settings, so there is nothing a marketplace
+entry can do.
+
+**What works is `.claude/commands/`** — project commands are read straight from
+the repo working tree, like `.claude/agents/`, with no install step. A consuming
+repo that needs `/ship` in a cloud session must ship it as a project command;
+see `agenticartists.com` for the working layout. The plugin form still works
+where plugins genuinely install, such as a desktop CLI.
+
+## Vendoring
+
+Independent of the above, consuming repos **vendor** this plugin rather than
+fetching it — a cloud container has no reason to reach out for it, and the
+`.claude/commands/` copies reference the vendored `templates/` and
+`hooks/loop-guard.sh` by repo-relative path. They copy
 
 ```
 .claude-plugin/marketplace.json
 plugins/agentic-loop/            (the whole tree)
 ```
 
-into their own repo root and register it as
+into their own repo root, and then wire it up **without relying on plugin
+loading**:
+
+1. Copy `plugins/agentic-loop/commands/*.md` to `.claude/commands/`, rewriting
+   `${CLAUDE_PLUGIN_ROOT}/templates/` to `plugins/agentic-loop/templates/` —
+   that variable is only set for a loaded plugin.
+2. Declare the `Stop` hook directly in the repo's committed
+   `.claude/settings.json`, because the plugin's own `hooks/hooks.json` is only
+   read when the plugin loads:
 
 ```json
 {
-  "extraKnownMarketplaces": {
-    "agenticartists": { "source": { "source": "directory", "path": "." } }
-  },
-  "enabledPlugins": { "agentic-loop@agenticartists": true }
+  "hooks": {
+    "Stop": [{ "hooks": [{
+      "type": "command",
+      "command": "\"$CLAUDE_PROJECT_DIR/plugins/agentic-loop/hooks/loop-guard.sh\"",
+      "timeout": 10
+    }]}]
+  }
 }
 ```
 
-in their committed `.claude/settings.json`.
+Adding `extraKnownMarketplaces` + `enabledPlugins` with a directory source on
+top is harmless and makes the plugin path work from a desktop CLI, but it does
+nothing in a cloud container — don't mistake its presence for the thing that
+makes `/ship` resolve.
 
 **This repo is the canonical master to copy from — not something repos fetch at
 runtime.** Edit the plugin here first, then propagate.

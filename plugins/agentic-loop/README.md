@@ -14,9 +14,10 @@ new session → /ship → plan, build, review, merge, deploy,
 
 ## Install
 
-**Vendor it. Do not use a `github` marketplace source** — Claude Code cloud
-containers don't fetch remote marketplaces at session start, and the failure is
-silent (`/ship` → "Unknown command", nothing to debug).
+**In a Claude Code cloud container, installing this as a plugin does not work —
+with any marketplace source.** A `github` source and a vendored `directory`
+source both leave `/ship` returning "Unknown command", with `~/.claude/plugins`
+never created. Install it as project files instead.
 
 Copy from `AgenticArtists/claude-plugins`, the canonical master, into the
 consuming repo's root, preserving file modes:
@@ -29,21 +30,20 @@ plugins/agentic-loop/            (the whole tree)
 `plugins/agentic-loop/hooks/loop-guard.sh` must be committed mode `100755`, or
 the `Stop` hook silently does nothing. Verify with `git ls-files -s`.
 
-Then register it from the local directory in the repo's committed
-`.claude/settings.json`:
+Then, because neither the commands nor the hook are reached unless the plugin
+loads:
 
-```json
-{
-  "extraKnownMarketplaces": {
-    "agenticartists": { "source": { "source": "directory", "path": "." } }
-  },
-  "enabledPlugins": { "agentic-loop@agenticartists": true }
-}
-```
+- copy `commands/*.md` into `.claude/commands/`, rewriting
+  `${CLAUDE_PLUGIN_ROOT}/templates` → `plugins/agentic-loop/templates`
+- declare the `Stop` hook in the repo's `.claude/settings.json`, pointing at
+  `$CLAUDE_PROJECT_DIR/plugins/agentic-loop/hooks/loop-guard.sh`
+
+See the claude-plugins README for the exact JSON.
 
 > **Updating.** The copy is a copy. Changing the plugin upstream does nothing to
-> a consuming repo until it's re-copied there and committed. See the
-> claude-plugins README for the list of known consumers.
+> a consuming repo until it's re-copied there and committed — including the
+> `.claude/commands/` copies. See the claude-plugins README for the list of
+> known consumers.
 
 Then, once per repository:
 
