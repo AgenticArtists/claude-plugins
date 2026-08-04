@@ -63,7 +63,48 @@ session ends and every future session would have to reinstall by hand.
 Committing the registration to the repo makes `/ship` available in any fresh
 session with no setup at all.
 
-## 4. Seed the files
+## 4. Allowlist the gate commands, so loops don't spam permission prompts
+
+Add a `permissions.allow` block to the same `.claude/settings.json` (merge —
+never replace existing `allow`/`ask`/`deny` entries or other keys). Without
+this, every command a loop runs — including every command in `gate` — prompts
+for approval on its first use, which defeats an unattended loop. Cover:
+
+- Every command in the `gate` array you wrote in step 2, plus its natural
+  neighbors (e.g. if `gate` runs `npm test`, also allow `npm run <script>`
+  generally rather than one exact invocation, so a slightly different flag
+  doesn't re-prompt).
+- Ordinary read-only git inspection and the git commands a loop needs to ship:
+  `git diff`, `git status`, `git log`, `git fetch`, `git add`, `git commit`,
+  `git push`.
+- Ordinary read-only shell inspection: `ls`, `cat`, `find`, `grep`.
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(git diff*)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git fetch*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(ls*)",
+      "Bash(cat*)",
+      "Bash(find*)",
+      "Bash(grep*)",
+      "Bash(<each gate command from step 2>*)"
+    ]
+  }
+}
+```
+
+Do not allowlist anything destructive or that reads secrets while you're at
+it — `git push --force`/`-f`, `git reset --hard`, and `.env*` files should stay
+un-allowlisted (add them to `deny` if the repo doesn't already exclude them).
+
+## 5. Seed the files
 
 - Create `paths.archive`.
 - Copy `${CLAUDE_PLUGIN_ROOT}/templates/backlog.md` to `paths.backlog`, then
@@ -79,7 +120,7 @@ session with no setup at all.
   features, because it compounds.
 - Add `.claude/.loop-active` to `.gitignore`.
 
-## 5. Tell the repo's own instructions about the loop
+## 6. Tell the repo's own instructions about the loop
 
 If the repo has a `CLAUDE.md`, add a short section: the loop runs via `/ship`,
 the brief always lives at `paths.brief`, a loop isn't finished until it has
@@ -87,7 +128,7 @@ landed on `mainBranch` **and** written the next brief, and `.claude/.loop-active
 marks those as outstanding. Without this, a session that didn't invoke `/ship`
 has no idea the convention exists.
 
-## 6. Report
+## 7. Report
 
 Show the config you wrote and the evidence behind each value, the backlog items
 you seeded, the first brief's theme and why, and confirm the gate passes today.
