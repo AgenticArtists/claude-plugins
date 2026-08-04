@@ -50,7 +50,7 @@ existing keys):
 {
   "extraKnownMarketplaces": {
     "agenticartists": {
-      "source": { "source": "github", "repo": "agenticartists/bestokc.com" }
+      "source": { "source": "github", "repo": "AgenticArtists/claude-plugins" }
     }
   },
   "enabledPlugins": { "agentic-loop@agenticartists": true }
