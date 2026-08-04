@@ -95,29 +95,47 @@ The agents are generic. **If your repo defines its own `planner`, `worker`, or
 `reviewer` agents, `/ship` uses those instead** — a repo that has tuned its own
 knows things this plugin doesn't.
 
-## Permissions: the loop needs `bypassPermissions`
+## Permissions: pick Auto mode, no settings file can do it
 
-`.claude/` is a protected path — Claude Code prompts on writes there in every
-permission mode except `bypassPermissions`, regardless of `permissions.allow`.
-This loop lives entirely inside `.claude/`: it arms `.claude/.loop-active`,
-writes the brief to `.claude/prompts/`, archives with `git mv`, then removes the
-marker. So any other mode prompts several times per loop and an unattended run
-stalls. `acceptEdits` does not help — it covers file edits, not Bash writes.
+`.claude/` is a **protected path**, and this loop lives entirely inside it —
+it arms `.claude/.loop-active`, writes the brief to `.claude/prompts/`,
+archives with `git mv`, then removes the marker. Several protected-path writes
+per run.
 
-Relaxing the mode is safe because the guardrail is a `PreToolUse` hook, not the
-mode. A hook exiting 2 stops a call *before* permission rules are evaluated, so
-it applies in every mode. Consuming repos declare it in `.claude/settings.json`
-alongside the `Stop` hook, blocking force-push (any argument position),
-`git reset --hard`, `rm -rf /`, and reads of real `.env` files, while letting
-`--force-with-lease` and `.env.example` through.
+Two things that look like fixes and are not:
 
-Also add `"Bash"` as a tool-only allow rule. Per-command rules like
-`Bash(npm run lint)` must match **each subcommand** of a compound command
-independently, so `npm run lint | tail -5` prompts unless `tail` is allowed too
-— endless to enumerate and still leaky.
+1. **`permissions.allow` does not pre-approve protected-path writes.** The
+   safety check runs *before* allow rules are evaluated, so neither
+   `Edit(.claude/**)` nor a tool-only `"Bash"` rule changes the outcome.
+2. **Claude Code on the web silently ignores `defaultMode: "bypassPermissions"`
+   and `"dontAsk"` from settings files**, so a repository cannot start a cloud
+   session in a permissive mode. `"auto"` is ignored from project settings for
+   the same reason — a repo can't grant itself auto mode.
 
-This assumes loops run in ephemeral containers, which is what the mode is
-scoped to. On a machine you care about, reconsider.
+| Mode | `.claude/` writes |
+|---|---|
+| `default`, `acceptEdits` | Prompted |
+| `auto` | Routed to the classifier — no prompt |
+| `dontAsk` | Denied |
+| `bypassPermissions` | Allowed, but not offered in cloud sessions |
+
+**Select "Auto" in the mode dropdown** before running `/ship` in a cloud
+session. That is the only lever. In a local CLI you can instead launch with
+`--permission-mode bypassPermissions`. Set `defaultMode: "acceptEdits"` in the
+repo as a floor — it is the one value a cloud session honors.
+
+Do still add `"Bash"` as a tool-only allow rule for non-protected paths:
+per-command rules must match **each subcommand** of a compound command
+independently, so `npm run lint | tail -5` prompts unless `tail` is allowed too.
+Auto mode drops blanket rules like that one, so keep the narrow per-command
+rules alongside it.
+
+The guardrail is a `PreToolUse` hook, not the mode. A hook exiting 2 stops a
+call *before* permission rules are evaluated, so it applies in every mode
+including Auto. Consuming repos declare it in `.claude/settings.json` beside the
+`Stop` hook, blocking force-push (any argument position), `git reset --hard`,
+`rm -rf /`, and reads of real `.env` files, while letting `--force-with-lease`
+and `.env.example` through.
 
 ## Configuration
 

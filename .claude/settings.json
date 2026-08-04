@@ -37,7 +37,7 @@
       "Read(./.env*)",
       "Read(../.env*)"
     ],
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "acceptEdits"
   },
   "hooks": {
     "PreToolUse": [
