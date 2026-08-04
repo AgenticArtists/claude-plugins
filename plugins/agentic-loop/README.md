@@ -14,17 +14,36 @@ new session → /ship → plan, build, review, merge, deploy,
 
 ## Install
 
+**Vendor it. Do not use a `github` marketplace source** — Claude Code cloud
+containers don't fetch remote marketplaces at session start, and the failure is
+silent (`/ship` → "Unknown command", nothing to debug).
+
+Copy from `AgenticArtists/claude-plugins`, the canonical master, into the
+consuming repo's root, preserving file modes:
+
 ```
-/plugin marketplace add AgenticArtists/claude-plugins
-/plugin install agentic-loop@agenticartists
+.claude-plugin/marketplace.json
+plugins/agentic-loop/            (the whole tree)
 ```
 
-> **Note on the marketplace's home.** This plugin is org-wide tooling that
-> happens to be hosted in a project repo, because that was the repo already
-> reachable when it was written. Intended home is `agenticartists/.github`.
-> Moving it is a copy of `.claude-plugin/` and `plugins/` plus a one-line change
-> for consumers (`/plugin marketplace add agenticartists/.github`) — nothing in
-> the plugin itself depends on where it lives.
+`plugins/agentic-loop/hooks/loop-guard.sh` must be committed mode `100755`, or
+the `Stop` hook silently does nothing. Verify with `git ls-files -s`.
+
+Then register it from the local directory in the repo's committed
+`.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "agenticartists": { "source": { "source": "directory", "path": "." } }
+  },
+  "enabledPlugins": { "agentic-loop@agenticartists": true }
+}
+```
+
+> **Updating.** The copy is a copy. Changing the plugin upstream does nothing to
+> a consuming repo until it's re-copied there and committed. See the
+> claude-plugins README for the list of known consumers.
 
 Then, once per repository:
 

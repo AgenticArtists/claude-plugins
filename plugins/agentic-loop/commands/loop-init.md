@@ -41,27 +41,56 @@ and be blamed for it.
 }
 ```
 
-## 3. Register the plugin in the repo, so fresh sessions load it automatically
+## 3. Vendor the plugin into the repo, so fresh sessions load it automatically
 
-Add this to the repo's committed `.claude/settings.json` (merge — never replace
-existing keys):
+**Copy the plugin into this repo and register it from a local directory. Do not
+use a `github` marketplace source.** Claude Code cloud containers do not fetch
+remote marketplaces at session start, so a `github` source silently yields a
+repo where `/ship` comes back "Unknown command" and there is nothing to debug
+from inside the session.
+
+Copy these two paths from `AgenticArtists/claude-plugins` — the canonical
+master — into this repo's root, preserving file modes:
+
+```
+.claude-plugin/marketplace.json
+plugins/agentic-loop/            (the whole tree)
+```
+
+`plugins/agentic-loop/hooks/loop-guard.sh` **must** be committed mode `100755`.
+Without the executable bit the `Stop` hook silently does nothing, and loops are
+free to end half-finished. Verify after committing:
+
+```
+git ls-files -s plugins/agentic-loop/hooks/loop-guard.sh   # expect 100755
+```
+
+Then add this to the repo's committed `.claude/settings.json` (merge — never
+replace existing keys):
 
 ```json
 {
   "extraKnownMarketplaces": {
     "agenticartists": {
-      "source": { "source": "github", "repo": "AgenticArtists/claude-plugins" }
+      "source": { "source": "directory", "path": "." }
     }
   },
   "enabledPlugins": { "agentic-loop@agenticartists": true }
 }
 ```
 
+`path` is `.` because `.claude-plugin/marketplace.json` now lives at this repo's
+root, and `marketplace.json` points at `./plugins/agentic-loop` from there.
+
 This matters more than it looks. A `/plugin install` writes to the *machine's*
 home directory, so in an ephemeral cloud container it evaporates when the
 session ends and every future session would have to reinstall by hand.
-Committing the registration to the repo makes `/ship` available in any fresh
-session with no setup at all.
+Committing both the plugin files and the registration to the repo makes `/ship`
+available in any fresh session with no setup and no network fetch at all.
+
+The tradeoff is that the copy is a copy: when the plugin changes upstream,
+someone has to re-copy it into every consuming repo. That's deliberate — see
+"Vendoring, not fetching" in the claude-plugins README.
 
 ## 4. Allowlist the gate commands, so loops don't spam permission prompts
 
