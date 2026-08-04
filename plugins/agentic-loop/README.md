@@ -2,14 +2,14 @@
 
 A self-perpetuating plan → build → review → ship loop for Claude Code.
 
-One prompt, `/loop`, drives planner → worker → reviewer → merge → deploy, and
+One prompt, `/ship`, drives planner → worker → reviewer → merge → deploy, and
 then writes the next loop's brief back to the same path — so the next loop
 starts with the identical prompt. Forever.
 
 ```
-new session → /loop → plan, build, review, merge, deploy,
-              update backlog, write next brief → "start the next one with /loop"
-            → new session → /loop → ...
+new session → /ship → plan, build, review, merge, deploy,
+              update backlog, write next brief → "start the next one with /ship"
+            → new session → /ship → ...
 ```
 
 ## Install
@@ -37,7 +37,7 @@ and writes `.claude/loop.config.json`, seeds a backlog, and drafts the first
 brief. Review what it wrote; it's making judgement calls about how your project
 verifies and ships.
 
-After that, every loop is just `/loop`.
+After that, every loop is just `/ship`.
 
 ## Why this exists
 
@@ -47,7 +47,7 @@ Three failures kill autonomous loops, and each piece here answers one:
 feature branch and told not to push elsewhere, which contradicts any "push to
 main" instruction the worker has. The worker obeying its harness is correct —
 which is exactly why approved work ends up stranded on a branch with nobody
-merging it. `/loop` makes merging the orchestrator's explicit job, and a `Stop`
+merging it. `/ship` makes merging the orchestrator's explicit job, and a `Stop`
 hook refuses to let the session end until it's done.
 
 **Institutional knowledge evaporates.** What got deferred, what couldn't be
@@ -64,7 +64,7 @@ theme" — forces an argument instead of a default.
 
 | Piece | Role |
 |---|---|
-| `/loop` | Runs one full loop end to end |
+| `/ship` | Runs one full loop end to end |
 | `/loop-init` | One-time per-repo setup |
 | `loop-planner` | Read-only; produces a numbered plan (opus) |
 | `loop-worker` | Implements it, step by step, committing as it goes |
@@ -73,7 +73,7 @@ theme" — forces an argument instead of a default.
 | Templates | Brief scaffold, backlog scaffold, brief-writing meta-prompt |
 
 The agents are generic. **If your repo defines its own `planner`, `worker`, or
-`reviewer` agents, `/loop` uses those instead** — a repo that has tuned its own
+`reviewer` agents, `/ship` uses those instead** — a repo that has tuned its own
 knows things this plugin doesn't.
 
 ## Configuration
@@ -99,11 +99,11 @@ output becomes a silent no-op if it runs before the build. `deploy.mode` is
 
 ## The Stop hook
 
-`/loop` writes `.claude/.loop-active` at kickoff and deletes it only after the
+`/ship` writes `.claude/.loop-active` at kickoff and deletes it only after the
 work has landed and the next brief is written. While it exists, the hook won't
 let the session end, and tells the model exactly what's outstanding.
 
-**No marker, no effect.** Sessions that never ran `/loop` are untouched. The
+**No marker, no effect.** Sessions that never ran `/ship` are untouched. The
 hook degrades safely: without `jq` it falls back to exit code 2, and without a
 config it uses generic wording. It should never be the reason a session can't
 end.
@@ -116,5 +116,5 @@ it's why you might see it unexpectedly.
 
 The system is explicitly allowed to conclude that the next move is a human's —
 provisioning credentials, granting access, a product decision. If that comes
-back and you just type `/loop` again, it'll pick the next-best agent work and
+back and you just type `/ship` again, it'll pick the next-best agent work and
 the real blocker stays put.

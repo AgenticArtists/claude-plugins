@@ -1,6 +1,6 @@
 ---
 name: loop-worker
-description: Implements an approved plan step by step with frequent small commits. Used by /loop when the repo defines no worker of its own.
+description: Implements an approved plan step by step with frequent small commits. Used by /ship when the repo defines no worker of its own.
 model: sonnet
 tools: Read, Write, Edit, Bash, Grep, Glob
 ---

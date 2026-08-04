@@ -3,7 +3,7 @@ description: Set up this repo for the agentic loop (config, brief, backlog, giti
 argument-hint: "[optional: what the first loop should focus on]"
 ---
 
-Set this repository up to run `/loop`. Do the investigation yourself — every
+Set this repository up to run `/ship`. Do the investigation yourself — every
 value below must come from reading the repo, not from a default.
 
 ## 1. Work out how this repo verifies and ships
@@ -60,7 +60,7 @@ existing keys):
 This matters more than it looks. A `/plugin install` writes to the *machine's*
 home directory, so in an ephemeral cloud container it evaporates when the
 session ends and every future session would have to reinstall by hand.
-Committing the registration to the repo makes `/loop` available in any fresh
+Committing the registration to the repo makes `/ship` available in any fresh
 session with no setup at all.
 
 ## 4. Seed the files
@@ -81,14 +81,14 @@ session with no setup at all.
 
 ## 5. Tell the repo's own instructions about the loop
 
-If the repo has a `CLAUDE.md`, add a short section: the loop runs via `/loop`,
+If the repo has a `CLAUDE.md`, add a short section: the loop runs via `/ship`,
 the brief always lives at `paths.brief`, a loop isn't finished until it has
 landed on `mainBranch` **and** written the next brief, and `.claude/.loop-active`
-marks those as outstanding. Without this, a session that didn't invoke `/loop`
+marks those as outstanding. Without this, a session that didn't invoke `/ship`
 has no idea the convention exists.
 
 ## 6. Report
 
 Show the config you wrote and the evidence behind each value, the backlog items
 you seeded, the first brief's theme and why, and confirm the gate passes today.
-Then tell the user they can start with `/loop`.
+Then tell the user they can start with `/ship`.

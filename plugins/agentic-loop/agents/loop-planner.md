@@ -1,6 +1,6 @@
 ---
 name: loop-planner
-description: Explores a codebase and writes a numbered implementation plan for an agentic loop. Read-only — makes no edits. Used by /loop when the repo defines no planner of its own.
+description: Explores a codebase and writes a numbered implementation plan for an agentic loop. Read-only — makes no edits. Used by /ship when the repo defines no planner of its own.
 model: opus
 tools: Read, Grep, Glob
 permission-mode: plan

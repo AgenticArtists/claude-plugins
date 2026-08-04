@@ -1,7 +1,7 @@
 # Next loop: <theme>
 
 **How to start this loop:** in a fresh session on the release branch, type
-`/loop`. That is the whole prompt, and it stays the same for every loop. It
+`/ship`. That is the whole prompt, and it stays the same for every loop. It
 reads this file, which is always the current brief.
 
 ---
