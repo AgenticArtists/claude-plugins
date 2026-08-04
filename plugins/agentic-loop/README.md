@@ -15,9 +15,16 @@ new session → /loop → plan, build, review, merge, deploy,
 ## Install
 
 ```
-/plugin marketplace add AgenticArtists/claude-plugins
+/plugin marketplace add agenticartists/bestokc.com
 /plugin install agentic-loop@agenticartists
 ```
+
+> **Note on the marketplace's home.** This plugin is org-wide tooling that
+> happens to be hosted in a project repo, because that was the repo already
+> reachable when it was written. Intended home is `agenticartists/.github`.
+> Moving it is a copy of `.claude-plugin/` and `plugins/` plus a one-line change
+> for consumers (`/plugin marketplace add agenticartists/.github`) — nothing in
+> the plugin itself depends on where it lives.
 
 Then, once per repository:
 

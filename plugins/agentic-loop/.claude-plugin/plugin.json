@@ -1,0 +1,9 @@
+{
+  "name": "agentic-loop",
+  "version": "1.0.0",
+  "description": "Self-perpetuating plan/build/review/ship loop. One unchanging prompt (/loop) drives planner -> worker -> reviewer -> merge -> deploy, then writes the next loop's brief so the same prompt works forever.",
+  "author": {
+    "name": "AgenticArtists"
+  },
+  "hooks": "./hooks/hooks.json"
+}
