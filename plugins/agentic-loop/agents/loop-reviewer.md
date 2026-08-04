@@ -1,6 +1,6 @@
 ---
 name: loop-reviewer
-description: Independently reviews a worker's diff — runs the gate and checks danger-zone reasoning. Makes no edits. Replies APPROVED or a numbered list of issues. Used by /loop when the repo defines no reviewer of its own.
+description: Independently reviews a worker's diff — runs the gate and checks danger-zone reasoning. Makes no edits. Replies APPROVED or a numbered list of issues. Used by /ship when the repo defines no reviewer of its own.
 model: sonnet
 tools: Read, Grep, Glob, Bash
 ---

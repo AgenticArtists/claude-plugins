@@ -96,4 +96,4 @@ rm .claude/.loop-active
 
 **6. Report.** In plain English: what shipped, what's live, anything that needs
 the user specifically, and the theme chosen for next time with your reasoning.
-End by confirming the next loop starts by typing `/loop` — nothing else.
+End by confirming the next loop starts by typing `/ship` — nothing else.

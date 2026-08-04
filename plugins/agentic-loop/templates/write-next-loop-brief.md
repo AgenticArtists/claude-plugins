@@ -73,4 +73,4 @@ Commit and push the archive move and the new brief together.
 **5. Report.** Tell the user: the theme you chose and why, what you rejected,
 and anything they must provide before the next loop can run — being explicit
 about whether the loop is *blocked* without it or merely better with it. Confirm
-the next loop starts with the same unchanged prompt: `/loop`.
+the next loop starts with the same unchanged prompt: `/ship`.
