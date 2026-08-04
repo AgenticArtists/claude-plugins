@@ -16,7 +16,14 @@
       "Bash(find*)",
       "Bash(grep*)",
       "Bash(rg*)",
-      "Bash(chmod*)"
+      "Bash(chmod*)",
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch"
     ],
     "deny": [
       "Bash(git push --force*)",
@@ -25,7 +32,25 @@
       "Bash(git push*-f*)",
       "Bash(git reset --hard*)",
       "Read(.env*)",
-      "Read(**/.env*)"
+      "Read(**/.env*)",
+      "Bash(git push*-f *)",
+      "Read(./.env*)",
+      "Read(../.env*)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "c=$(jq -r \".tool_input.command // \\\"\\\"\" 2>/dev/null); case \"$c\" in *\"push\"*\"--force\"*|*\"push\"*\" -f \"*|*\"push\"*\" -f\"|*\"reset --hard\"*|*\"rm -rf /\"*|*\"rm -fr /\"*) echo \"Blocked by repo guard: destructive command ($c)\" >&2; exit 2;; esac; exit 0",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
