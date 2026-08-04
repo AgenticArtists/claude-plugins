@@ -95,6 +95,30 @@ The agents are generic. **If your repo defines its own `planner`, `worker`, or
 `reviewer` agents, `/ship` uses those instead** — a repo that has tuned its own
 knows things this plugin doesn't.
 
+## Permissions: the loop needs `bypassPermissions`
+
+`.claude/` is a protected path — Claude Code prompts on writes there in every
+permission mode except `bypassPermissions`, regardless of `permissions.allow`.
+This loop lives entirely inside `.claude/`: it arms `.claude/.loop-active`,
+writes the brief to `.claude/prompts/`, archives with `git mv`, then removes the
+marker. So any other mode prompts several times per loop and an unattended run
+stalls. `acceptEdits` does not help — it covers file edits, not Bash writes.
+
+Relaxing the mode is safe because the guardrail is a `PreToolUse` hook, not the
+mode. A hook exiting 2 stops a call *before* permission rules are evaluated, so
+it applies in every mode. Consuming repos declare it in `.claude/settings.json`
+alongside the `Stop` hook, blocking force-push (any argument position),
+`git reset --hard`, `rm -rf /`, and reads of real `.env` files, while letting
+`--force-with-lease` and `.env.example` through.
+
+Also add `"Bash"` as a tool-only allow rule. Per-command rules like
+`Bash(npm run lint)` must match **each subcommand** of a compound command
+independently, so `npm run lint | tail -5` prompts unless `tail` is allowed too
+— endless to enumerate and still leaky.
+
+This assumes loops run in ephemeral containers, which is what the mode is
+scoped to. On a machine you care about, reconsider.
+
 ## Configuration
 
 `.claude/loop.config.json`, written by `/loop-init`:
