@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "c=$(jq -r \".tool_input.command // \\\"\\\"\" 2>/dev/null); case \"$c\" in *\"push\"*\"--force\"*|*\"push\"*\" -f \"*|*\"push\"*\" -f\"|*\"reset --hard\"*|*\"rm -rf /\"*|*\"rm -fr /\"*) echo \"Blocked by repo guard: destructive command ($c)\" >&2; exit 2;; esac; exit 0",
+            "command": "c=$(jq -r \".tool_input.command // \\\"\\\"\" 2>/dev/null); case \"$c\" in *\"--force-with-lease\"*) exit 0;; esac; case \"$c\" in *\"push\"*\"--force\"*|*\"push\"*\" -f \"*|*\"push\"*\" -f\"|*\"reset --hard\"*|*\"rm -rf /\"*|*\"rm -fr /\"*) echo \"Blocked by repo guard: destructive command ($c)\" >&2; exit 2;; esac; exit 0",
             "timeout": 10
           }
         ]
