@@ -12,14 +12,55 @@ new session → /ship → plan, build, review, merge, deploy,
             → new session → /ship → ...
 ```
 
+## Vendoring, not fetching
+
+**Claude Code cloud containers do not fetch a remote marketplace at session
+start.** A repo registered with `{"source": "github", "repo":
+"AgenticArtists/claude-plugins"}` comes up with no plugin loaded at all — `/ship`
+returns "Unknown command", `~/.claude/plugins` is never created, and there is no
+error to find from inside the session. Only a local `directory` source works.
+
+So consuming repos **vendor** this plugin: they copy
+
+```
+.claude-plugin/marketplace.json
+plugins/agentic-loop/            (the whole tree)
+```
+
+into their own repo root and register it as
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "agenticartists": { "source": { "source": "directory", "path": "." } }
+  },
+  "enabledPlugins": { "agentic-loop@agenticartists": true }
+}
+```
+
+in their committed `.claude/settings.json`.
+
+**This repo is the canonical master to copy from — not something repos fetch at
+runtime.** Edit the plugin here first, then propagate.
+
+`plugins/agentic-loop/hooks/loop-guard.sh` must land as mode `100755` in every
+copy. Without the executable bit the `Stop` hook silently does nothing and loops
+can end half-finished. Check with `git ls-files -s` after committing.
+
+### Updating a consuming repo
+
+There is no auto-update. Changing the plugin here does nothing to any consumer
+until the two paths above are re-copied into it and committed.
+
+Known consumers, all of which need re-copying when this plugin changes:
+
+- `bestokc.com`
+- `agenticartists.com`
+
 ## Install
 
-```
-/plugin marketplace add AgenticArtists/claude-plugins
-/plugin install agentic-loop@agenticartists
-```
-
-Then, once per repository:
+Vendor the two paths above into the repo (see "Vendoring, not fetching"), then,
+once per repository:
 
 ```
 /loop-init
