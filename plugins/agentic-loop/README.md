@@ -15,7 +15,7 @@ new session → /ship → plan, build, review, merge, deploy,
 ## Install
 
 ```
-/plugin marketplace add agenticartists/bestokc.com
+/plugin marketplace add AgenticArtists/claude-plugins
 /plugin install agentic-loop@agenticartists
 ```
 
