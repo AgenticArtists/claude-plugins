@@ -166,6 +166,13 @@ knows things this plugin doesn't.
 output becomes a silent no-op if it runs before the build. `deploy.mode` is
 `push` (merging deploys), `command` (run `deploy.command`), or `none`.
 
+Optional `siblingRepos: [{ "path": "...", "mainBranch": "..." }]` — for a repo
+whose loop can touch a companion repo checked out next to it. `/ship` pushes each
+sibling's unpushed commits as part of landing, so cross-repo work never gets
+stranded on one side. Skipped with a note (not an error) when the path isn't
+reachable, which is always true in a cloud session for anything outside its own
+checkout.
+
 ## The Stop hook
 
 `/ship` writes `.claude/.loop-active` at kickoff and deletes it only after the

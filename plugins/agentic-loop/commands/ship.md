@@ -12,7 +12,8 @@ and stop — this repo isn't set up yet, and guessing its branch, gate commands,
 and deploy mechanism is exactly the kind of assumption that ships broken work.
 
 The config gives you: `mainBranch`, `gate` (the commands that must pass),
-`deploy`, and `paths.brief` / `paths.backlog` / `paths.archive`.
+`deploy`, `paths.brief` / `paths.backlog` / `paths.archive`, and optionally
+`siblingRepos` — see step 4 for what that's for.
 
 Read the brief at `paths.brief` and the backlog at `paths.backlog` together. The
 brief is one loop's view; the backlog is everything still outstanding. If the
@@ -96,6 +97,18 @@ produces an implausible flood of type errors, check this before believing them.
 - Push. Then honor `deploy`: if `deploy.mode` is `push`, the push is the deploy
   (confirm it succeeded); if `command`, run `deploy.command`; if `none`, skip.
 - A failed deploy belongs to this loop, not the next one.
+- **If `siblingRepos` is set in the config, land each one too.** A brief can touch
+  more than this repo — a companion pipeline, a shared library — and this repo's
+  `mainBranch` landing does nothing for those. For each `{path, mainBranch}` entry:
+  check the path exists (skip with a note if not — a cloud session usually can't
+  see a sibling repo at all, since it's outside the checkout; that's expected, not
+  an error), then `git -C <path> branch --show-current` and `git -C <path> log
+  origin/<mainBranch>..HEAD --oneline`. If there's anything to push, push it — the
+  same rule as this repo: **a loop isn't done until every configured repo shows an
+  empty diff against its own `origin/<mainBranch>`.** Report every repo's final
+  commit hash, not just this one's. Sibling repos don't inherit this repo's `gate`
+  or `deploy` — if one needs its own verification before pushing, the brief should
+  say so explicitly; otherwise pushing what's already committed is all this step does.
 
 Expect this step to be necessary rather than redundant. Hosted/web coding
 sessions are often assigned a feature branch and told not to push elsewhere,

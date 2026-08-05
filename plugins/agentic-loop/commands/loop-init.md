@@ -41,6 +41,24 @@ and be blamed for it.
 }
 ```
 
+**Only if a brief will touch a sibling repo** (a companion pipeline, a shared
+library checked out next to this one) — omit otherwise:
+
+```json
+{
+  "siblingRepos": [
+    { "path": "../research", "mainBranch": "main" }
+  ]
+}
+```
+
+`/ship`'s landing step pushes each configured sibling too, when it has unpushed
+commits, so a loop never leaves cross-repo work stranded on one side. Only add a
+sibling that's actually a git repo at that relative path; a cloud session can't
+see anything outside its own checkout, so this only fires anything on a local
+session where the path exists — `/ship` skips it with a note otherwise, not an
+error.
+
 ## 3. Vendor the plugin into the repo, so fresh sessions load it automatically
 
 **Copy the plugin into this repo and register it from a local directory. Do not
