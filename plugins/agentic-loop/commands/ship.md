@@ -79,6 +79,14 @@ suite actually exited non-zero from a clean clone — it passed only because bui
 output happened to be lying around from an earlier step. **If the brief's
 definition of done makes a claim about a clean environment, verify it in one.**
 
+**Before running any `gate` command for the first time, make sure dependencies are
+installed.** A fresh clone in a cloud container has no `node_modules` (or equivalent),
+and a typecheck or lint run against a bare tree fails with thousands of spurious
+"cannot find name" errors that look like a catastrophic breakage rather than a missing
+install. Check for the dependency directory and install if absent — `npm ci` when a
+lockfile exists, otherwise the project's documented install command. If a gate command
+produces an implausible flood of type errors, check this before believing them.
+
 **4. Land it on `mainBranch`.** The step loops skip. Verify explicitly:
 
 - `git branch --show-current` and `git log origin/<mainBranch>..HEAD --oneline`
